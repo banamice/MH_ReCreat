@@ -1,0 +1,32 @@
+# Unreal Engine generated output
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# IDE and editor metadata
+.idea/
+.vs/
+.vscode/
+.vsconfig
+
+# Generated Visual Studio / Rider solutions and user state
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.DotSettings.user
+*.VC.db
+*.opensdf
+*.opendb
+*.sdf
+
+# Generated Xcode projects
+*.xcodeproj
+*.xcworkspace
+
+# Local build and analysis files
+*.pidb
+*.booproj
+.mono/
