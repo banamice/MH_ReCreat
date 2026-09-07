@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
+#include "GameplayAbilitySpec.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "MH_BaseAttributeSet.generated.h"
 
 /**
@@ -13,4 +15,7 @@ UCLASS()
 class MH_RECREATE_API UMH_BaseAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
+	
+public:
+
 };

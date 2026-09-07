@@ -50,6 +50,6 @@ private:
 #pragma region Getter Setter
 public:
 	UFUNCTION(BlueprintPure, Category = "MH|Combat")
-	FORCEINLINE UMH_PlayerCombatComponent* GetMHCombatComponent() const { return CombatComponent; }
+	UMH_PlayerCombatComponent* GetMHCombatComponent() const;
 #pragma endregion
 };

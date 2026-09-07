@@ -17,5 +17,5 @@ public:
 	
 	void OnAbilityInputPressed(const FGameplayTag& AbilityTag);
 	void OnAbilityInputReleased(const FGameplayTag& AbilityTag);
-
+	
 };

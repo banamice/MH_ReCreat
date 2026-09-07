@@ -16,13 +16,17 @@ void UMH_PlayerSetupDataAsset::GiveAbilitiesToASC(UMH_BaseAbilitySystemComponent
 	Super::GiveAbilitiesToASC(InAsc, AbilityLevel);
 	for (const auto& Ability : InputAbility)
 	{
-		if (!Ability.IsValid()) continue;
 		
 		FGameplayAbilitySpec Spec(Ability.Ability, AbilityLevel);
 		Spec.SourceObject = InAsc->GetAvatarActor();
 		Spec.Level = AbilityLevel;
-		Spec.DynamicAbilityTags.AddTag(Ability.GameplayTag);
-		InAsc->GiveAbility(Spec);
+		//不一定需要添加tag、战斗状态其实不依靠inputTag激活能力。只有非战斗状态，比如说家园里的翔虫之类的没有固定状态的。
+		//使用输入绑定激活
+		if (Ability.GameplayTag.IsValid())
+		{
+			Spec.DynamicAbilityTags.AddTag(Ability.GameplayTag);
+		}
+		InAsc->GiveAbility(Spec); 
 	}
 }
 

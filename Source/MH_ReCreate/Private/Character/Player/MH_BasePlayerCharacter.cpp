@@ -46,13 +46,19 @@ AMH_BasePlayerCharacter::AMH_BasePlayerCharacter()
 void AMH_BasePlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-}
 
+	// Recover the native component pointer if a stale Blueprint archetype cleared it.
+	if (!IsValid(CombatComponent))
+	{
+		CombatComponent = FindComponentByClass<UMH_PlayerCombatComponent>();
+	}
+
+	ensureMsgf(IsValid(CombatComponent), TEXT("%s has no UMH_PlayerCombatComponent"), *GetName());
+}
 
 void AMH_BasePlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	check(SetupDataAsset)
 	ensureMsgf(!SetupDataAsset.IsNull(),TEXT("SetupDataAsset is nullptr"));
 	
 	UMH_BaseSetupDataAsset* LocalDA = SetupDataAsset.LoadSynchronous();
@@ -119,4 +125,12 @@ void AMH_BasePlayerCharacter::AbilityReleased(FGameplayTag AbilityTag)
 	AbilitySystemComponent->OnAbilityInputReleased(AbilityTag);
 }
 
+UMH_PlayerCombatComponent* AMH_BasePlayerCharacter::GetMHCombatComponent() const
+{
+	if (IsValid(CombatComponent))
+	{
+		return CombatComponent;
+	}
 
+	return FindComponentByClass<UMH_PlayerCombatComponent>();
+}

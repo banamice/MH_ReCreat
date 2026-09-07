@@ -8,10 +8,18 @@
 void UMH_CharacterAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
-	MH_Character = Cast<AMH_BaseCharacter>(TryGetPawnOwner());
-	if (MH_Character)
+	NativeUpdateAnimation(0.0f);
+}
+
+void UMH_CharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+
+	AMH_BaseCharacter* Character = Cast<AMH_BaseCharacter>(TryGetPawnOwner());
+	if (MH_Character != Character)
 	{
-		MH_MovementComponent = MH_Character->GetCharacterMovement();
+		MH_Character = Character;
+		MH_MovementComponent = Character ? Character->GetCharacterMovement() : nullptr;
 	}
 }
 
@@ -24,3 +32,9 @@ void UMH_CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 	VelocityXY = FVector(VelocityXYZ.X,VelocityXYZ.Y,0.0f);
 	Acceleration = MH_MovementComponent->GetCurrentAcceleration();
 }
+
+void UMH_CharacterAnimInstance::SetGaitType(const EGaitType InGaitType) 
+{
+	GaitType = InGaitType;
+}
+

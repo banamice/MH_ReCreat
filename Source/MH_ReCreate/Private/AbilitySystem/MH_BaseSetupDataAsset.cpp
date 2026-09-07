@@ -29,5 +29,6 @@ void UMH_BaseSetupDataAsset::GiveAbilitiesFromArray(UMH_BaseAbilitySystemCompone
 		Spec.SourceObject = InAsc->GetAvatarActor();
 		Spec.Level = AbilityLevel;
 		InAsc->GiveAbility(Spec); 
+		
 	}
 }
