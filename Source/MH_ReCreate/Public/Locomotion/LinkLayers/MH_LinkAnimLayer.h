@@ -22,9 +22,15 @@ public:
 	
 	
 #pragma region LocomitionAmin
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Animation")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Idle")
 	TObjectPtr<UAnimSequenceBase> IdleAnim;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Animation")
-	TObjectPtr<UAnimSequenceBase> CycleAnim;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Cycle")
+	float WalkSlowThreadHold = 150.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Cycle")
+	TObjectPtr<UAnimSequenceBase> CycleWalkSlow;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Cycle")
+	TObjectPtr<UAnimSequenceBase> CycleWalk;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Cycle")
+	TObjectPtr<UAnimSequenceBase> CycleRun;
 #pragma endregion
 };
