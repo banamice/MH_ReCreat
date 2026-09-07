@@ -11,10 +11,14 @@ namespace MH_GameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Look,"InputTag.Look");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_EquipWeapon,"InputTag.EquipWeapon");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_UnEquipWeapon,"InputTag.UnEquipWeapon");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Aim,"InputTag.Aim");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_GapllingHook,"InputTag.GapllingHook");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Run,"InputTag.Run");
 	
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Combo_Y,"InputTag.Combo.Y");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Combo_B,"InputTag.Combo.B");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Combo_YB,"InputTag.Combo.YB");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Combo_LT,"InputTag.Combo.LT");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Combo_RT,"InputTag.Combo.RT");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Combo_LTY,"InputTag.Combo.LTY");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Combo_LTB,"InputTag.Combo.LTB");

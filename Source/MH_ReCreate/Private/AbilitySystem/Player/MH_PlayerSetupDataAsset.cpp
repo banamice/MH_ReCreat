@@ -24,7 +24,7 @@ void UMH_PlayerSetupDataAsset::GiveAbilitiesToASC(UMH_BaseAbilitySystemComponent
 		//使用输入绑定激活
 		if (Ability.GameplayTag.IsValid())
 		{
-			Spec.DynamicAbilityTags.AddTag(Ability.GameplayTag);
+			Spec.GetDynamicSpecSourceTags().AddTag(Ability.GameplayTag);
 		}
 		InAsc->GiveAbility(Spec); 
 	}

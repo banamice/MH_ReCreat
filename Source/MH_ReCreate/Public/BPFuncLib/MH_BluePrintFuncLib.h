@@ -19,4 +19,5 @@ class MH_RECREATE_API UMH_BluePrintFuncLib : public UBlueprintFunctionLibrary
 public:
 	UFUNCTION(BlueprintCallable, Category = "MH|Debug")
 	static void PrintStr(const FLinearColor& Color, const FString& Content, FName Key = NAME_None);
+	static void SetMovementLocomotionParams();
 };

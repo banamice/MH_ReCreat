@@ -29,7 +29,6 @@ UAbilitySystemComponent* AMH_BaseCharacter::GetAbilitySystemComponent() const
 void AMH_BaseCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	
 	if (!HasAuthority()) return;
 	check(AbilitySystemComponent)
 	AbilitySystemComponent->InitAbilityActorInfo(this,this);
@@ -39,5 +38,12 @@ void AMH_BaseCharacter::OnRep_Controller()
 {
 	Super::OnRep_Controller();
 	AbilitySystemComponent->InitAbilityActorInfo(this,this);
+}
+
+void AMH_BaseCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	check(IsValid(DefaultLinkAnimLayer))
+	GetMesh()->LinkAnimClassLayers(DefaultLinkAnimLayer);
 }
 

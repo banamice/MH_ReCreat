@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Locomotion/MH_LocomotionType.h"
+#include "Locomotion/MH_LocomotionParameters.h"
 #include "UObject/Interface.h"
 #include "MH_PlayerAnimInterface.generated.h"
 
@@ -21,5 +21,5 @@ class MH_RECREATE_API IMH_PlayerAnimInterface
 	GENERATED_BODY()
 
 public:
-	virtual void SetGaitType(const EGaitType InGaitType) = 0;
+	virtual void SetGaitType(const FGaitType InGaitType) = 0;
 };

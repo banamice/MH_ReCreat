@@ -18,4 +18,13 @@ class MH_RECREATE_API UMH_LinkAnimLayer : public UMH_BaseAnimInstance
 public:
 	UFUNCTION(BlueprintPure, Category = "MH|Animation", meta = (BlueprintThreadSafe))
 	UMH_PlayerAnimInstance* GetPlayerAnimInstance() const;
+	
+	
+	
+#pragma region LocomitionAmin
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Animation")
+	TObjectPtr<UAnimSequenceBase> IdleAnim;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Animation")
+	TObjectPtr<UAnimSequenceBase> CycleAnim;
+#pragma endregion
 };

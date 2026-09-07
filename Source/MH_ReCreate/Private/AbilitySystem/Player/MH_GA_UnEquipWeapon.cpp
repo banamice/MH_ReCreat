@@ -4,6 +4,7 @@
 #include "AbilitySystem/Player/MH_GA_UnEquipWeapon.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "Character/Player/MH_BasePlayerCharacter.h"
 #include "Component/CombatComponent/MH_PawnCombatConponent.h"
 #include "GameFramework/Character.h"
 #include "Weapon/MH_BaseWeapon.h"
@@ -44,4 +45,7 @@ void UMH_GA_UnEquipWeapon::OnEventReceived(FGameplayEventData Payload)
 	//调用武器的移除函数来移除IMC,能力，动画层
 	Weapon->RemoveWeaponSetFromDA(CurrentActorInfo->AbilitySystemComponent.Get(),CurrentActorInfo->PlayerController.Get(),
 		Cast<ACharacter>(CurrentActorInfo->AvatarActor.Get()));
+	
+	//调用player的设置运动参数函数，将运动参数重置回walk状态
+	Cast<AMH_BasePlayerCharacter>(CurrentActorInfo->AvatarActor.Get())->OnGaitTypeChange(FGaitType::Walk);
 }

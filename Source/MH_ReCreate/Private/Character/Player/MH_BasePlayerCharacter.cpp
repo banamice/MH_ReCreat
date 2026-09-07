@@ -14,6 +14,8 @@
 #include "DataAsset/MH_DA_Input.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Locomotion/MH_DA_GaitLocomotionParams.h"
+#include "Locomotion/Interface/MH_PlayerAnimInterface.h"
 #include "MH_ReCreate/Public/BPFuncLib/MH_BluePrintFuncLib.h"
 
 
@@ -54,6 +56,9 @@ void AMH_BasePlayerCharacter::BeginPlay()
 	}
 
 	ensureMsgf(IsValid(CombatComponent), TEXT("%s has no UMH_PlayerCombatComponent"), *GetName());
+	
+	//更新默认姿态运动参数
+	OnGaitTypeChange(GaitType);
 }
 
 void AMH_BasePlayerCharacter::PossessedBy(AController* NewController)
@@ -76,6 +81,47 @@ void AMH_BasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 	BindInput(PlayerInputComponent);
 }
 
+
+void AMH_BasePlayerCharacter::OnGaitTypeChange(const FGaitType InGaitType)
+{
+	if (!IsValid(LocomotionParams))
+	{
+		UE_LOG(LogMH, Error, TEXT("%s: LocomotionParams is not configured"), *GetName());
+		return;
+	}
+
+	const FLocomotionParameters* Parameters = LocomotionParams->GaitParams.Find(InGaitType);
+	if (!Parameters)
+	{
+		UE_LOG(LogMH, Error, TEXT("%s: LocomotionParams has no entry for gait type %d"),
+			*GetName(), static_cast<uint8>(InGaitType));
+		return;
+	}
+
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	if (!IsValid(MovementComponent))
+	{
+		UE_LOG(LogMH, Error, TEXT("%s: CharacterMovementComponent is invalid"), *GetName());
+		return;
+	}
+
+	MovementComponent->MaxWalkSpeed = Parameters->MaxWalkSpeed;
+	MovementComponent->MaxAcceleration = Parameters->MaxAcceleration;
+	MovementComponent->BrakingDecelerationWalking = Parameters->BrakingDeceleration;
+	MovementComponent->BrakingFrictionFactor = Parameters->BrakingFrictionFactor;
+	MovementComponent->BrakingFriction = Parameters->BrakingFriction;
+	MovementComponent->bUseSeparateBrakingFriction = Parameters->bUseSeparateBrakingFriction;
+
+	GaitType = InGaitType;
+
+	if (USkeletalMeshComponent* MeshComponent = GetMesh();
+		IMH_PlayerAnimInterface* AnimInterface = MeshComponent
+			? Cast<IMH_PlayerAnimInterface>(MeshComponent->GetAnimInstance())
+			: nullptr)
+	{
+		AnimInterface->SetGaitType(InGaitType);
+	}
+}
 
 void AMH_BasePlayerCharacter::BindInput(UInputComponent* PlayerInputComponent)
 {

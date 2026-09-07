@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "Locomotion/MH_LocomotionParameters.h"
 #include "MH_ReCreate/Public/Character/MH_BaseCharacter.h"
 #include "MH_BasePlayerCharacter.generated.h"
 
+class UMH_DA_GaitLocomotionParams;
 class UMH_PlayerCombatComponent;
 struct FInputActionValue;
 class UMH_DA_Input;
@@ -25,6 +27,7 @@ public:
 	//~ Begin APawn Interface.
 	virtual void PossessedBy(AController* NewController) override;
 	//~ End APawn Interface
+
 protected:
 	
 	
@@ -37,6 +40,16 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera",meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UMH_PlayerCombatComponent> CombatComponent;
 #pragma endregion
+	
+#pragma region Locomotion
+	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Lcocomotion",meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMH_DA_GaitLocomotionParams> LocomotionParams;
+	FGaitType GaitType = FGaitType::Walk;
+	void OnGaitTypeChange(const FGaitType InGaitType);
+#pragma endregion
+	
 #pragma  region Input
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Input",meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UMH_DA_Input> InputDA;

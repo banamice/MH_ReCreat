@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
+#include "Locomotion/LinkLayers/MH_LinkAnimLayer.h"
 #include "MH_BaseCharacter.generated.h"
 
 class UMH_BaseSetupDataAsset;
@@ -29,6 +30,7 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 	//~ End APawn Interface
 	virtual void OnRep_Controller() override;
+	virtual void BeginPlay() override;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera",meta = (AllowPrivateAccess = "true"))
@@ -37,11 +39,14 @@ protected:
 	TObjectPtr<UMH_BaseAttributeSet> AttributeSet;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MH|Setup",meta = (AllowPrivateAccess = "true"))
 	TSoftObjectPtr<UMH_BaseSetupDataAsset> SetupDataAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MH|Setup",meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UMH_LinkAnimLayer> DefaultLinkAnimLayer;
 	
 #pragma region  Getter Setter
 public:
 	FORCEINLINE UMH_BaseAbilitySystemComponent* GetMHAbilitySystemComponent() const { return AbilitySystemComponent; }
 	FORCEINLINE UMH_BaseAttributeSet* GetAttributeSet() const { return AttributeSet; }
+	FORCEINLINE TSubclassOf<UMH_LinkAnimLayer> GetDefaultLinkAnimLayer() const { return DefaultLinkAnimLayer; }
 #pragma endregion
 };
 

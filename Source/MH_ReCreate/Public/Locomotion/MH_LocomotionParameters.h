@@ -15,7 +15,27 @@ struct FLocomotionParameters
 	GENERATED_BODY()
 	
 public:
-	//还有很多
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float WalkSpeed = 100.f;
+	float MaxWalkSpeed = 250.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxAcceleration = 250.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BrakingDeceleration = 250.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BrakingFrictionFactor = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BrakingFriction = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUseSeparateBrakingFriction= true;
+	
+	
+};
+
+//这里指的是姿态循环之外的type。比如说晕厥，下蹲,走路，跑步
+UENUM(BlueprintType)
+enum class FGaitType: uint8
+{
+	Walk,
+	Run,
+	Crouch,
 };

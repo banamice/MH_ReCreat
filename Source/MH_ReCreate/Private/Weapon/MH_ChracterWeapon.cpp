@@ -32,6 +32,7 @@ void AMH_ChracterWeapon::SetupWeaponSetFromDA(UAbilitySystemComponent* InASC, AP
 	}
 	
 	//切换链接动画层
+
 	if (WeaponDataAsset->WeaponData.LinkAnimLayer)
 	{
 		InPlayerCharacter->GetMesh()->LinkAnimClassLayers(WeaponDataAsset->WeaponData.LinkAnimLayer);
@@ -72,14 +73,16 @@ void AMH_ChracterWeapon::SetupWeaponSetFromDA(UAbilitySystemComponent* InASC, AP
 		//使用输入绑定激活
 		if (InputAbility.GameplayTag.IsValid())
 		{
-			Spec.DynamicAbilityTags.AddTag(InputAbility.GameplayTag);
+			Spec.GetDynamicSpecSourceTags().AddTag(InputAbility.GameplayTag);
 		}
 		GrantedAbilities.Add(InMHASC->GiveAbility(Spec));
 	}
 	
-	//后续还需要添加注册input回调
-	
 	//还需要设置运动数据
+	//首先将运动状态设置回walk。持刀状态没有run
+	AMH_BasePlayerCharacter* BasePlayerCharacter = Cast<AMH_BasePlayerCharacter>(InPlayerCharacter);
+	BasePlayerCharacter->OnGaitTypeChange(FGaitType::Walk);
+	//再更新武器自己的参数
 }
 
 void AMH_ChracterWeapon::RemoveWeaponSetFromDA(UAbilitySystemComponent* InASC, APlayerController* InPlayerController,
@@ -91,10 +94,11 @@ void AMH_ChracterWeapon::RemoveWeaponSetFromDA(UAbilitySystemComponent* InASC, A
 		return;
 	}
 	
-	//取消链接动画层
+	AMH_BaseCharacter* BaseCharacter = Cast<AMH_BaseCharacter>(InPlayerCharacter);
+	//取消链接动画层->切换链接层至默认
 	if (WeaponDataAsset->WeaponData.LinkAnimLayer)
 	{
-		InPlayerCharacter->GetMesh()->UnlinkAnimClassLayers(WeaponDataAsset->WeaponData.LinkAnimLayer);
+		InPlayerCharacter->GetMesh()->LinkAnimClassLayers(BaseCharacter->GetDefaultLinkAnimLayer());
 	}
 	
 	//取消imc

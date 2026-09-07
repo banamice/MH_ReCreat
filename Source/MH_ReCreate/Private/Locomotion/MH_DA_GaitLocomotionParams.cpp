@@ -1,4 +1,4 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Locomotion/MH_LocomotionType.h"
+#include "Locomotion/MH_DA_GaitLocomotionParams.h"
