@@ -62,7 +62,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Start")
 	TObjectPtr<UAnimSequenceBase> StartWalkRight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Start")
-	TObjectPtr<UAnimSequenceBase> StartWalkBack;
+	TObjectPtr<UAnimSequenceBase> StartWalkBackL;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Start")
+	TObjectPtr<UAnimSequenceBase> StartWalkBackR;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Start")
 	TObjectPtr<UAnimSequenceBase> StartCrouchForWard;
 	
@@ -71,13 +73,40 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
 	TObjectPtr<UAnimSequenceBase> PivotWalkRight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
-	TObjectPtr<UAnimSequenceBase> PivotWalkBack;
+	TObjectPtr<UAnimSequenceBase> PivotWalkBackL;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
+	TObjectPtr<UAnimSequenceBase> PivotWalkBackR;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
 	TObjectPtr<UAnimSequenceBase> PivotCrouchLeft;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
 	TObjectPtr<UAnimSequenceBase> PivotCrouchRight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
-	TObjectPtr<UAnimSequenceBase> PivotCrouchBack;
+	TObjectPtr<UAnimSequenceBase> PivotCrouchBackL;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
+	TObjectPtr<UAnimSequenceBase> PivotCrouchBackR;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpStartRun;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpStartWalk;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpStartLoop;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpApex;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpFallLoop;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpLandNone;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpLandFwd;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpLandLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpLandRight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpLandBwdL;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Jump")
+	TObjectPtr<UAnimSequenceBase> JumpLandBwdR;
 #pragma endregion
 
 };

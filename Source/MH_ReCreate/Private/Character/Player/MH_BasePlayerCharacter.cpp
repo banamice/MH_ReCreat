@@ -142,7 +142,15 @@ bool AMH_BasePlayerCharacter::ApplyLocomotionState(
 		return false;
 	}
 
-	MovementComponent->MaxWalkSpeed = Parameters->MaxWalkSpeed;
+	// CMC 在蹲下时读取 MaxWalkSpeedCrouched，不能只修改 MaxWalkSpeed。
+	if (InBaseGaitType == FGaitType::Crouch)
+	{
+		MovementComponent->MaxWalkSpeedCrouched = Parameters->MaxWalkSpeed;
+	}
+	else
+	{
+		MovementComponent->MaxWalkSpeed = Parameters->MaxWalkSpeed;
+	}
 	MovementComponent->MaxAcceleration = Parameters->MaxAcceleration;
 	MovementComponent->BrakingDecelerationWalking = Parameters->BrakingDeceleration;
 	MovementComponent->BrakingFrictionFactor = Parameters->BrakingFrictionFactor;
@@ -247,6 +255,48 @@ float AMH_BasePlayerCharacter::GetGroundSlopeAngle() const
 	return MovementComponent ? MovementComponent->GroundSlopeAngle : 0.0f;
 }
 
+void AMH_BasePlayerCharacter::SetAirborneControlEnabled(const bool bEnabled)
+{
+	if (UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent())
+	{
+		MovementComponent->SetAirborneControlEnabled(bEnabled);
+	}
+}
+
+void AMH_BasePlayerCharacter::SetAirborneMovementEnabled(const bool bEnabled)
+{
+	if (UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent())
+	{
+		MovementComponent->SetAirborneMovementEnabled(bEnabled);
+	}
+}
+
+void AMH_BasePlayerCharacter::SetAirborneRotationEnabled(const bool bEnabled)
+{
+	if (UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent())
+	{
+		MovementComponent->SetAirborneRotationEnabled(bEnabled);
+	}
+}
+
+bool AMH_BasePlayerCharacter::IsAirborneControlEnabled() const
+{
+	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	return MovementComponent && MovementComponent->IsAirborneControlEnabled();
+}
+
+bool AMH_BasePlayerCharacter::IsAirborneMovementEnabled() const
+{
+	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	return MovementComponent && MovementComponent->IsAirborneMovementEnabled();
+}
+
+bool AMH_BasePlayerCharacter::IsAirborneRotationEnabled() const
+{
+	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	return MovementComponent && MovementComponent->IsAirborneRotationEnabled();
+}
+
 ECrouchInputAction AMH_BasePlayerCharacter::GetPredictedCrouchInputAction() const
 {
 	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
@@ -326,6 +376,12 @@ bool AMH_BasePlayerCharacter::TryPerformContextualJump()
 
 	UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
 	if (!MovementComponent || MovementComponent->IsFalling())
+	{
+		return false;
+	}
+
+	// 蹲姿下本次输入只允许解除蹲姿，不能直接进入跳跃逻辑。
+	if (BaseGaitType == FGaitType::Crouch || IsCrouched())
 	{
 		return false;
 	}

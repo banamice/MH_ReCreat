@@ -41,6 +41,17 @@ void UMH_GA_Crouch::ActivateAbility(
 		return;
 	}
 
+	// 蹲姿下第一次按键只解除蹲姿，不能在同一次输入中跳跃。
+	if (Character->GetBaseGaitType() == FGaitType::Crouch || Character->IsCrouched())
+	{
+		if (!Character->ResetMovementStateForJump())
+		{
+			UE_LOG(LogMH, Warning, TEXT("%s: Failed to leave crouch before contextual jump evaluation"), *Character->GetName());
+		}
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+		return;
+	}
+
 	const FGaitType TargetGait = Character->GetBaseGaitType() == FGaitType::Crouch
 		? FGaitType::Walk
 		: FGaitType::Crouch;

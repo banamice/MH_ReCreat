@@ -51,9 +51,10 @@ enum class EMovementDirection : uint8
 {
 	None,
 	Forward,
-	Backward,
 	Left,
 	Right,
+	BackwardLeft,
+	BackwardRight,
 };
 
 USTRUCT(BlueprintType)

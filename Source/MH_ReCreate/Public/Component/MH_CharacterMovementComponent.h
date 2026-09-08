@@ -75,11 +75,41 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MH|Movement|Slide")
 	void RefreshSurfaceState();
 
+	/** 临时开启或关闭空中的移动输入和角色转向。默认进入空中时为关闭。 */
+	UFUNCTION(BlueprintCallable, Category = "MH|Movement|Air Control")
+	void SetAirborneControlEnabled(bool bEnabled);
+
+	/** 单独开启或关闭空中的移动输入。 */
+	UFUNCTION(BlueprintCallable, Category = "MH|Movement|Air Control")
+	void SetAirborneMovementEnabled(bool bEnabled);
+
+	/** 单独开启或关闭空中的角色转向。 */
+	UFUNCTION(BlueprintCallable, Category = "MH|Movement|Air Control")
+	void SetAirborneRotationEnabled(bool bEnabled);
+
+	/** 返回当前是否允许空中移动和转向。 */
+	UFUNCTION(BlueprintPure, Category = "MH|Movement|Air Control")
+	bool IsAirborneControlEnabled() const
+	{
+		return bAirborneMovementEnabled && bAirborneRotationEnabled;
+	}
+
+	/** 返回当前是否允许空中移动输入。 */
+	UFUNCTION(BlueprintPure, Category = "MH|Movement|Air Control")
+	bool IsAirborneMovementEnabled() const { return bAirborneMovementEnabled; }
+
+	/** 返回当前是否允许空中角色转向。 */
+	UFUNCTION(BlueprintPure, Category = "MH|Movement|Air Control")
+	bool IsAirborneRotationEnabled() const { return bAirborneRotationEnabled; }
+
 protected:
 	virtual void OnMovementUpdated(
 		float DeltaSeconds,
 		const FVector& OldLocation,
 		const FVector& OldVelocity) override;
+	virtual void OnMovementModeChanged(
+		EMovementMode PreviousMovementMode,
+		uint8 PreviousCustomMode) override;
 
 private:
 	/** 根据 CharacterMovementComponent 当前的 FloorResult 更新所有滑行数据。 */
@@ -87,4 +117,17 @@ private:
 	void ResetSurfaceState();
 	void UpdateLedgeState();
 	void ResetLedgeState();
+	void ApplyAirborneControlState();
+
+	/** 空中是否允许输入移动。 */
+	bool bAirborneMovementEnabled = false;
+
+	/** 空中是否允许角色转向。 */
+	bool bAirborneRotationEnabled = false;
+
+	/** 进入空中前缓存的地面移动和旋转配置。 */
+	bool bAirborneSettingsCached = false;
+	float CachedAirControl = 0.0f;
+	bool CachedOrientRotationToMovement = false;
+	bool CachedUseControllerRotationYaw = false;
 };

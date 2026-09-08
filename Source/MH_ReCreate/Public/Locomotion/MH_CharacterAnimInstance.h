@@ -76,13 +76,13 @@ public:
 	// 加速度方向与角色前方向之间的夹角，单位为度，范围为 0 到 180。
 	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Speed", meta = (AllowPrivateAccess = "true"))
 	float AccelerationDirectionAngle = 0.0f;
-	// 根据角色朝向分类后的加速度方向：前、后、左、右或 None。
+	// 根据角色朝向分类后的加速度方向：前、左、右、左后、右后或 None。
 	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Speed", meta = (AllowPrivateAccess = "true"))
 	EMovementDirection AccelerationDirection = EMovementDirection::None;
 	// 加速度方向与当前速度方向之间的夹角，单位为度。
 	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Speed", meta = (AllowPrivateAccess = "true"))
 	float AccelerationVelocityAngle = 0.0f;
-	// 根据加速度相对速度方向分类后的方向：前、后、左、右或 None。
+	// 根据加速度相对速度方向分类后的方向：前、左、右、左后、右后或 None。
 	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Speed", meta = (AllowPrivateAccess = "true"))
 	EMovementDirection AccelerationVelocityDirection = EMovementDirection::None;
 	// 加速度方向发生变化后，记录需要切换到的目标方向。
@@ -118,6 +118,9 @@ public:
 	bool bIsFalling = false ;
 	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Jump", meta = (AllowPrivateAccess = "true"))
 	bool bIsOnAir = false ;
+	/** Remaining time, in seconds, until the character reaches the jump apex. */
+	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Jump", meta = (AllowPrivateAccess = "true"))
+	float TimeToJumpApex = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Context", meta = (AllowPrivateAccess = "true"))
 	bool bCanPerformLedgeJump = false;

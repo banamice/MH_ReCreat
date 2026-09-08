@@ -33,6 +33,107 @@ void UMH_CharacterMovementComponent::RefreshSurfaceState()
 	UpdateSurfaceState();
 }
 
+void UMH_CharacterMovementComponent::SetAirborneControlEnabled(const bool bEnabled)
+{
+	bAirborneMovementEnabled = bEnabled;
+	bAirborneRotationEnabled = bEnabled;
+	if (MovementMode == MOVE_Falling)
+	{
+		ApplyAirborneControlState();
+	}
+}
+
+void UMH_CharacterMovementComponent::SetAirborneMovementEnabled(const bool bEnabled)
+{
+	bAirborneMovementEnabled = bEnabled;
+	if (MovementMode == MOVE_Falling)
+	{
+		ApplyAirborneControlState();
+	}
+}
+
+void UMH_CharacterMovementComponent::SetAirborneRotationEnabled(const bool bEnabled)
+{
+	bAirborneRotationEnabled = bEnabled;
+	if (MovementMode == MOVE_Falling)
+	{
+		ApplyAirborneControlState();
+	}
+}
+
+void UMH_CharacterMovementComponent::OnMovementModeChanged(
+	const EMovementMode PreviousMovementMode,
+	const uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
+
+	if (MovementMode == MOVE_Falling && PreviousMovementMode != MOVE_Falling)
+	{
+		if (ACharacter* Character = GetCharacterOwner())
+		{
+			CachedAirControl = AirControl;
+			CachedOrientRotationToMovement = bOrientRotationToMovement;
+			CachedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
+			bAirborneSettingsCached = true;
+		}
+
+		// 默认锁定空中控制；如果能力已提前开启，则保留该显式请求。
+		ApplyAirborneControlState();
+	}
+	else if (MovementMode != MOVE_Falling && PreviousMovementMode == MOVE_Falling)
+	{
+		if (ACharacter* Character = GetCharacterOwner(); bAirborneSettingsCached && Character)
+		{
+			AirControl = CachedAirControl;
+			bOrientRotationToMovement = CachedOrientRotationToMovement;
+			Character->bUseControllerRotationYaw = CachedUseControllerRotationYaw;
+		}
+
+		bAirborneSettingsCached = false;
+		bAirborneMovementEnabled = false;
+		bAirborneRotationEnabled = false;
+	}
+}
+
+void UMH_CharacterMovementComponent::ApplyAirborneControlState()
+{
+	if (MovementMode != MOVE_Falling)
+	{
+		return;
+	}
+
+	ACharacter* Character = GetCharacterOwner();
+	if (!Character)
+	{
+		return;
+	}
+
+	// 禁用移动时保留起跳已有速度，只忽略新的空中输入。
+	if (bAirborneMovementEnabled)
+	{
+		AirControl = bAirborneSettingsCached ? CachedAirControl : AirControl;
+	}
+	else
+	{
+		AirControl = 0.0f;
+	}
+
+	if (bAirborneRotationEnabled)
+	{
+		bOrientRotationToMovement = bAirborneSettingsCached
+			? CachedOrientRotationToMovement
+			: true;
+		Character->bUseControllerRotationYaw = bAirborneSettingsCached
+			? CachedUseControllerRotationYaw
+			: false;
+	}
+	else
+	{
+		bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = false;
+	}
+}
+
 void UMH_CharacterMovementComponent::UpdateSurfaceState()
 {
 	ResetSurfaceState();

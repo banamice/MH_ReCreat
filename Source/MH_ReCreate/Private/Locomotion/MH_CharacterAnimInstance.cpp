@@ -100,32 +100,55 @@ namespace MHLocomotionDebug
 
 namespace
 {
-	EMovementDirection GetAccelerationDirection(
+	EMovementDirection GetRelativeMovementDirection(
 		const FVector& Acceleration,
-		const FVector& CharacterForward,
-		const FVector& CharacterRight)
+		const FVector& ReferenceForward,
+		const FVector& ReferenceRight)
 	{
 		const FVector AccelerationDirection = Acceleration.GetSafeNormal2D();
-		if (AccelerationDirection.IsNearlyZero() || CharacterForward.IsNearlyZero())
+		if (AccelerationDirection.IsNearlyZero()
+			|| ReferenceForward.IsNearlyZero()
+			|| ReferenceRight.IsNearlyZero())
 		{
 			return EMovementDirection::None;
 		}
 
 		const float ForwardDot = FMath::Clamp(
-			FVector::DotProduct(CharacterForward, AccelerationDirection), -1.0f, 1.0f);
+			FVector::DotProduct(ReferenceForward, AccelerationDirection), -1.0f, 1.0f);
 		const float Angle = FMath::RadiansToDegrees(FMath::Acos(ForwardDot));
 		if (Angle <= 45.0f)
 		{
 			return EMovementDirection::Forward;
 		}
+
+		const float RightDot = FVector::DotProduct(ReferenceRight, AccelerationDirection);
 		if (Angle >= 135.0f)
 		{
-			return EMovementDirection::Backward;
+			return RightDot > 0.0f
+				? EMovementDirection::BackwardRight
+				: EMovementDirection::BackwardLeft;
 		}
 
-		return FVector::DotProduct(CharacterRight, AccelerationDirection) >= 0.0f
+		return RightDot >= 0.0f
 			? EMovementDirection::Right
 			: EMovementDirection::Left;
+	}
+
+	bool IsBackwardDirection(const EMovementDirection Direction)
+	{
+		return Direction == EMovementDirection::BackwardLeft
+			|| Direction == EMovementDirection::BackwardRight;
+	}
+
+	bool AreSameMajorMovementDirection(
+		const EMovementDirection FirstDirection,
+		const EMovementDirection SecondDirection)
+	{
+		const bool bFirstIsBackward = IsBackwardDirection(FirstDirection);
+		const bool bSecondIsBackward = IsBackwardDirection(SecondDirection);
+		return bFirstIsBackward || bSecondIsBackward
+			? bFirstIsBackward && bSecondIsBackward
+			: FirstDirection == SecondDirection;
 	}
 }
 
@@ -220,10 +243,24 @@ void UMH_CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 		Acceleration2D = FVector::ZeroVector;
 		AccelerationDirection = EMovementDirection::None;
 		bIsAccelerating = false;
+		bIsJumping = false;
+		bIsFalling = false;
+		bIsOnAir = false;
+		TimeToJumpApex = 0.0f;
 		return;
 	}
 	
 	VelocityXYZ = MH_MovementComponent->Velocity;
+	const bool bMovementIsFalling = MH_MovementComponent->IsFalling();
+	const bool bMovementIsAscending = VelocityXYZ.Z > KINDA_SMALL_NUMBER;
+	// 使用实际垂直速度区分上升和下落，不使用 GetCurrentAcceleration().Z。
+	bIsOnAir = bMovementIsFalling;
+	bIsJumping = bMovementIsFalling && bMovementIsAscending;
+	bIsFalling = bMovementIsFalling && !bMovementIsAscending;
+	const float GravityMagnitude = FMath::Abs(MH_MovementComponent->GetGravityZ());
+	TimeToJumpApex = bIsJumping && GravityMagnitude > KINDA_SMALL_NUMBER
+		? FMath::Max(0.0f, VelocityXYZ.Z / GravityMagnitude)
+		: 0.0f;
 	DeltaDistance = VelocityXYZ.Size2D() * DeltaSeconds;
 	VelocityXY = bIsLocomotionVelocitySuppressed
 		? FVector::ZeroVector
@@ -237,7 +274,7 @@ void UMH_CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 
 	AccelerationDirectionAngle = 0.0f;
 	const FVector AccelerationVectorDirection = Acceleration2D.GetSafeNormal2D();
-	AccelerationDirection = GetAccelerationDirection(Acceleration2D, CharacterForward2D, CharacterRight2D);
+	AccelerationDirection = GetRelativeMovementDirection(Acceleration2D, CharacterForward2D, CharacterRight2D);
 	if (!AccelerationVectorDirection.IsNearlyZero() && !CharacterForward2D.IsNearlyZero())
 	{
 		const float ForwardDot = FMath::Clamp(FVector::DotProduct(CharacterForward2D, AccelerationVectorDirection), -1.0f, 1.0f);
@@ -251,28 +288,17 @@ void UMH_CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 			FVector::DotProduct(VelocityDirection, AccelerationVectorDirection), -1.0f, 1.0f);
 		AccelerationVelocityAngle = FMath::RadiansToDegrees(FMath::Acos(VelocityDot));
 
-		if (AccelerationVelocityAngle <= 45.0f)
-		{
-			AccelerationVelocityDirection = EMovementDirection::Forward;
-		}
-		else if (AccelerationVelocityAngle >= 135.0f)
-		{
-			AccelerationVelocityDirection = EMovementDirection::Backward;
-		}
-		else
-		{
-			const FVector VelocityRight = FVector(-VelocityDirection.Y, VelocityDirection.X, 0.0f);
-			AccelerationVelocityDirection = FVector::DotProduct(VelocityRight, AccelerationVectorDirection) >= 0.0f
-				? EMovementDirection::Right
-				: EMovementDirection::Left;
-		}
+		AccelerationVelocityDirection = GetRelativeMovementDirection(
+			Acceleration2D,
+			VelocityDirection,
+			FVector(-VelocityDirection.Y, VelocityDirection.X, 0.0f));
 	}
 
-	const EMovementDirection PreviousDirection = GetAccelerationDirection(
+	const EMovementDirection PreviousDirection = GetRelativeMovementDirection(
 		PreviousAcceleration2D, CharacterForward2D, CharacterRight2D);
 	bAccelerationChange = PreviousDirection != EMovementDirection::None
 		&& AccelerationDirection != EMovementDirection::None
-		&& PreviousDirection != AccelerationDirection;
+		&& !AreSameMajorMovementDirection(PreviousDirection, AccelerationDirection);
 	//在下一次改变之前都保存需要前往的方向
 	ChangeDirectionTo = bAccelerationChange ? AccelerationDirection : ChangeDirectionTo;
 
@@ -289,15 +315,7 @@ void UMH_CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 		MH_MovementComponent->GroundFriction
 	);
 	
-	if (MH_MovementComponent->GetCurrentAcceleration().Z > 0.0f && MH_MovementComponent->IsFalling())
-	{
-		bIsJumping = true;
-		bIsFalling = true;
-	}else if ( MH_MovementComponent->IsFalling() && MH_MovementComponent->GetCurrentAcceleration().Z <= 0.0f)
-	{
-		bIsFalling = true;
-		bIsFalling = true;
-	}
+
 
 }
 
