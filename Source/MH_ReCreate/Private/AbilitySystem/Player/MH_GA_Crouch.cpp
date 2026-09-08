@@ -22,10 +22,22 @@ void UMH_GA_Crouch::ActivateAbility(
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	AMH_BasePlayerCharacter* Character = GetPlayerCharacter();
+	if (Character && Character->GetCharacterMovement() && Character->GetCharacterMovement()->IsFalling())
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+		return;
+	}
 	if (!Character)
 	{
 		UE_LOG(LogMH, Warning, TEXT("%s: Crouch ability has no player character"), *GetName());
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	// 同一个输入在滑坡或悬崖边缘时优先执行前跳，普通地面仍然执行下蹲切换。
+	if (Character->TryPerformContextualJump())
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 		return;
 	}
 

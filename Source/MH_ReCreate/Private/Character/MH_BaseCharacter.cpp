@@ -9,7 +9,8 @@
 
 
 // Sets default values
-AMH_BaseCharacter::AMH_BaseCharacter()
+AMH_BaseCharacter::AMH_BaseCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = false;
 	PrimaryActorTick.bStartWithTickEnabled = false;

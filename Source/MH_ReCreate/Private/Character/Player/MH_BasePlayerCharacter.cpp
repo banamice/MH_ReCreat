@@ -12,7 +12,10 @@
 #include "Core/MH_EnhanceInputComponent.h"
 #include "Core/MH_GameplayTags.h"
 #include "DataAsset/MH_DA_Input.h"
+#include "Component/MH_CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/WorldSettings.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Locomotion/MH_DA_GaitLocomotionParams.h"
 #include "Locomotion/Interface/MH_PlayerAnimInterface.h"
@@ -20,7 +23,9 @@
 
 
 // Sets default values
-AMH_BasePlayerCharacter::AMH_BasePlayerCharacter()
+AMH_BasePlayerCharacter::AMH_BasePlayerCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UMH_CharacterMovementComponent>(
+		ACharacter::CharacterMovementComponentName))
 {
 	PrimaryActorTick.bCanEverTick = false;
 	
@@ -97,6 +102,12 @@ bool AMH_BasePlayerCharacter::SetBaseGaitType(const FGaitType InBaseGaitType)
 bool AMH_BasePlayerCharacter::SetRunState(const bool bInRunning)
 {
 	return ApplyLocomotionState(BaseGaitType, bInRunning ? EMoveState::Run : EMoveState::None);
+}
+
+bool AMH_BasePlayerCharacter::ResetMovementStateForJump()
+{
+	UnCrouch();
+	return ApplyLocomotionState(FGaitType::Walk, EMoveState::None);
 }
 
 bool AMH_BasePlayerCharacter::ApplyLocomotionState(
@@ -211,4 +222,222 @@ UMH_PlayerCombatComponent* AMH_BasePlayerCharacter::GetMHCombatComponent() const
 	}
 
 	return FindComponentByClass<UMH_PlayerCombatComponent>();
+}
+
+UMH_CharacterMovementComponent* AMH_BasePlayerCharacter::GetMHCharacterMovementComponent() const
+{
+	return Cast<UMH_CharacterMovementComponent>(GetCharacterMovement());
+}
+
+bool AMH_BasePlayerCharacter::IsSliding() const
+{
+	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	return MovementComponent && MovementComponent->IsSliding();
+}
+
+bool AMH_BasePlayerCharacter::CanSlide() const
+{
+	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	return MovementComponent && MovementComponent->CanSlide();
+}
+
+float AMH_BasePlayerCharacter::GetGroundSlopeAngle() const
+{
+	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	return MovementComponent ? MovementComponent->GroundSlopeAngle : 0.0f;
+}
+
+ECrouchInputAction AMH_BasePlayerCharacter::GetPredictedCrouchInputAction() const
+{
+	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	return IsSliding() || (MovementComponent && MovementComponent->CanPerformLedgeJump())
+		? ECrouchInputAction::Jump
+		: ECrouchInputAction::Crouch;
+}
+
+ECrouchInputReason AMH_BasePlayerCharacter::GetPredictedCrouchInputReason() const
+{
+	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	if (IsSliding())
+	{
+		return ECrouchInputReason::Sliding;
+	}
+	if (MovementComponent && MovementComponent->CanPerformLedgeJump())
+	{
+		return ECrouchInputReason::Ledge;
+	}
+	return ECrouchInputReason::NormalGround;
+}
+
+float AMH_BasePlayerCharacter::GetSlideSpeed() const
+{
+	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	return MovementComponent ? MovementComponent->SlideSpeed : 0.0f;
+}
+
+FVector AMH_BasePlayerCharacter::GetSlideDirection() const
+{
+	const UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	return MovementComponent ? MovementComponent->SlideDirection : FVector::ZeroVector;
+}
+
+bool AMH_BasePlayerCharacter::TryGetForwardLedgeJumpVelocity(FVector& OutJumpVelocity)
+{
+	ResetLedgeJumpState();
+	OutJumpVelocity = FVector::ZeroVector;
+
+	UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	const UCapsuleComponent* CharacterCapsule = GetCapsuleComponent();
+	if (!MovementComponent || !CharacterCapsule || MovementComponent->IsFalling())
+	{
+		return false;
+	}
+
+	FHitResult LedgeHit;
+	float DropHeight = 0.0f;
+	if (!FindForwardLedgeDrop(LedgeHit, DropHeight))
+	{
+		return false;
+	}
+
+	const FVector ForwardDirection = GetActorForwardVector().GetSafeNormal2D();
+	if (ForwardDirection.IsNearlyZero())
+	{
+		return false;
+	}
+
+	const float CapsuleHeight = CharacterCapsule->GetScaledCapsuleHalfHeight() * 2.0f;
+	if (DropHeight < CapsuleHeight)
+	{
+		return false;
+	}
+
+	OutJumpVelocity = ForwardDirection * LedgeJumpForwardSpeed
+		+ FVector::UpVector * LedgeJumpUpSpeed;
+	LedgeDropHeight = DropHeight;
+	LedgeJumpVelocity = OutJumpVelocity;
+	bLedgeJumpAvailable = true;
+	return true;
+}
+
+bool AMH_BasePlayerCharacter::TryPerformContextualJump()
+{
+	ResetLedgeJumpState();
+
+	UMH_CharacterMovementComponent* MovementComponent = GetMHCharacterMovementComponent();
+	if (!MovementComponent || MovementComponent->IsFalling())
+	{
+		return false;
+	}
+
+	// CMC 已经在移动更新中维护滑行状态，输入事件只需读取并执行跳跃。
+	MovementComponent->RefreshSurfaceState();
+	if (MovementComponent->IsSliding())
+	{
+		const FVector ForwardDirection = GetActorForwardVector().GetSafeNormal2D();
+		if (ForwardDirection.IsNearlyZero())
+		{
+			return false;
+		}
+		if (!ResetMovementStateForJump())
+		{
+			return false;
+		}
+
+		LedgeJumpVelocity = ForwardDirection * LedgeJumpForwardSpeed
+			+ FVector::UpVector * LedgeJumpUpSpeed;
+		LaunchCharacter(LedgeJumpVelocity, true, true);
+		return true;
+	}
+
+	if (!MovementComponent->CanPerformLedgeJump())
+	{
+		return false;
+	}
+
+	const FVector ForwardDirection = GetActorForwardVector().GetSafeNormal2D();
+	if (ForwardDirection.IsNearlyZero())
+	{
+		return false;
+	}
+	if (!ResetMovementStateForJump())
+	{
+		return false;
+	}
+	LedgeDropHeight = MovementComponent->LedgeDropHeight;
+	LedgeJumpVelocity = ForwardDirection * LedgeJumpForwardSpeed
+		+ FVector::UpVector * LedgeJumpUpSpeed;
+	bLedgeJumpAvailable = true;
+	LaunchCharacter(LedgeJumpVelocity, true, true);
+	return true;
+}
+
+bool AMH_BasePlayerCharacter::FindForwardLedgeDrop(
+	FHitResult& OutHitResult,
+	float& OutDropHeight) const
+{
+	OutHitResult = FHitResult();
+	OutDropHeight = 0.0f;
+
+	const UWorld* World = GetWorld();
+	const UCapsuleComponent* CharacterCapsule = GetCapsuleComponent();
+	if (!World || !CharacterCapsule)
+	{
+		return false;
+	}
+
+	const FVector ForwardDirection = GetActorForwardVector().GetSafeNormal2D();
+	if (ForwardDirection.IsNearlyZero())
+	{
+		return false;
+	}
+
+	FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(MHForwardLedge), false, this);
+	QueryParams.AddIgnoredActor(this);
+
+	// 先检查前方是否有墙体，避免把墙前方的地面误判为悬崖落点。
+	const FVector WallStart = GetActorLocation();
+	const FVector WallEnd = WallStart + ForwardDirection * LedgeProbeDistance;
+	if (World->LineTraceTestByChannel(WallStart, WallEnd, LedgeTraceChannel, QueryParams))
+	{
+		return false;
+	}
+
+	const float CapsuleHalfHeight = CharacterCapsule->GetScaledCapsuleHalfHeight();
+	const FVector CharacterBase = GetActorLocation() - FVector::UpVector * CapsuleHalfHeight;
+	const FVector ProbeLocation = CharacterBase + ForwardDirection * LedgeProbeDistance;
+
+	// 从胶囊体顶部向世界下限检测，不设置可配置的最大悬崖落差。
+	float TraceEndZ = World->GetWorldSettings()
+		? World->GetWorldSettings()->KillZ
+		: ProbeLocation.Z - 100000.0f;
+	if (TraceEndZ >= ProbeLocation.Z)
+	{
+		TraceEndZ = ProbeLocation.Z - 100000.0f;
+	}
+
+	const FVector TraceStart(
+		ProbeLocation.X,
+		ProbeLocation.Y,
+		ProbeLocation.Z + CapsuleHalfHeight * 2.0f);
+	const FVector TraceEnd(ProbeLocation.X, ProbeLocation.Y, TraceEndZ);
+	if (!World->LineTraceSingleByChannel(
+		OutHitResult,
+		TraceStart,
+		TraceEnd,
+		LedgeTraceChannel,
+		QueryParams))
+	{
+		return false;
+	}
+
+	OutDropHeight = CharacterBase.Z - OutHitResult.ImpactPoint.Z;
+	return OutDropHeight > 0.0f;
+}
+
+void AMH_BasePlayerCharacter::ResetLedgeJumpState()
+{
+	bLedgeJumpAvailable = false;
+	LedgeDropHeight = 0.0f;
+	LedgeJumpVelocity = FVector::ZeroVector;
 }

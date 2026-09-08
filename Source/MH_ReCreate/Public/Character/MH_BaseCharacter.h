@@ -20,7 +20,7 @@ class MH_RECREATE_API AMH_BaseCharacter : public ACharacter,public IAbilitySyste
 	GENERATED_BODY()
 
 public:
-	AMH_BaseCharacter();
+	AMH_BaseCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 	//~ Begin IAbilitySystemInterface Interface.
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override; ;

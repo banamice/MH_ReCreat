@@ -5,6 +5,7 @@
 
 #include "AnimCharacterMovementLibrary.h"
 #include "Character/Player/MH_BasePlayerCharacter.h"
+#include "Component/MH_CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
 
@@ -19,6 +20,7 @@ namespace MHLocomotionDebug
 	constexpr uint64 BrakingConfigKey = HeaderKey + 5;
 	constexpr uint64 ErrorKey = HeaderKey + 6;
 	constexpr uint64 DirectionKey = HeaderKey + 7;
+	constexpr uint64 CrouchInputKey = HeaderKey + 8;
 	constexpr float ArrowDuration = 0.0f;
 	constexpr float ArrowSize = 20.0f;
 	constexpr float MinimumArrowLength = 50.0f;
@@ -158,6 +160,16 @@ void UMH_CharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (MH_Character && MH_MovementComponent)
 	{
 		bIsPlayingRootMotion = MH_Character->IsPlayingRootMotion();
+		bCanPerformLedgeJump = false;
+		bIsSliding = false;
+		if (const AMH_BasePlayerCharacter* PlayerCharacter = Cast<AMH_BasePlayerCharacter>(MH_Character.Get()))
+		{
+			if (const UMH_CharacterMovementComponent* PlayerMovement = PlayerCharacter->GetMHCharacterMovementComponent())
+			{
+				bCanPerformLedgeJump = PlayerMovement->CanPerformLedgeJump();
+			}
+			bIsSliding = PlayerCharacter->IsSliding();
+		}
 		const bool bHasMovementInput = !MH_MovementComponent->GetCurrentAcceleration().IsNearlyZero(1.0f);
 		const bool bHasStopped = MH_MovementComponent->Velocity.SizeSquared2D() <= FMath::Square(1.0f);
 
@@ -175,6 +187,8 @@ void UMH_CharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		bIsPlayingRootMotion = false;
 		bIsLocomotionVelocitySuppressed = false;
+		bCanPerformLedgeJump = false;
+		bIsSliding = false;
 	}
 	
 	if (LastGaitType != GaitType)
@@ -320,6 +334,7 @@ void UMH_CharacterAnimInstance::Debug()
 	const FString GaitName = UEnum::GetValueAsString(GaitType);
 	const FString MoveStateName = UEnum::GetValueAsString(MoveState);
 	const FString MovementModeName = MH_MovementComponent->GetMovementName();
+	const AMH_BasePlayerCharacter* PlayerCharacter = Cast<AMH_BasePlayerCharacter>(MH_Character.Get());
 	const float CapsuleHalfHeight = MH_Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	const FVector GroundLocation = MH_Character->GetActorLocation() - FVector(0.0f, 0.0f, CapsuleHalfHeight - 6.0f);
 	const FVector PlanarAcceleration(Acceleration2D.X, Acceleration2D.Y, 0.0f);
@@ -365,6 +380,28 @@ void UMH_CharacterAnimInstance::Debug()
 			MH_MovementComponent->IsMovingOnGround() ? TEXT("true") : TEXT("false"),
 			MH_MovementComponent->IsFalling() ? TEXT("true") : TEXT("false"),
 			MH_MovementComponent->IsCrouching() ? TEXT("true") : TEXT("false")));
+	if (PlayerCharacter)
+	{
+		const ECrouchInputAction PredictedAction = PlayerCharacter->GetPredictedCrouchInputAction();
+		const ECrouchInputReason PredictedReason = PlayerCharacter->GetPredictedCrouchInputReason();
+		const FString CrouchActionName = UEnum::GetValueAsString(PredictedAction);
+		const FString CrouchReasonName = UEnum::GetValueAsString(PredictedReason);
+		const FColor CrouchActionColor = PredictedAction == ECrouchInputAction::Jump
+			? FColor::Red
+			: PredictedAction == ECrouchInputAction::Crouch
+				? FColor::Green
+				: FColor::Yellow;
+
+		MHLocomotionDebug::AddMessage(
+			MHLocomotionDebug::CrouchInputKey,
+			CrouchActionColor,
+			FString::Printf(
+				TEXT("Crouch Input | Action: %s | Reason: %s | Slope: %.1f deg | Slide Speed: %.1f"),
+				* CrouchActionName,
+				* CrouchReasonName,
+				PlayerCharacter->GetGroundSlopeAngle(),
+				PlayerCharacter->GetSlideSpeed()));
+	}
 	MHLocomotionDebug::AddMessage(
 		MHLocomotionDebug::VelocityKey,
 		FColor::Cyan,

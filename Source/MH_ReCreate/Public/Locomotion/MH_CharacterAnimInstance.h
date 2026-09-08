@@ -118,5 +118,12 @@ public:
 	bool bIsFalling = false ;
 	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Jump", meta = (AllowPrivateAccess = "true"))
 	bool bIsOnAir = false ;
+
+	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Context", meta = (AllowPrivateAccess = "true"))
+	bool bCanPerformLedgeJump = false;
+	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Context", meta = (AllowPrivateAccess = "true"))
+	bool bIsSliding = false;
 #pragma endregion
+
+
 };
