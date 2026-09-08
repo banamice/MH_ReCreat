@@ -6,9 +6,7 @@
 #include "MH_PlayerGameplayAbility.h"
 #include "MH_GA_Run.generated.h"
 
-/**
- * 
- */
+// 持续奔跑能力，松开输入后恢复当前姿态的普通移动参数。
 UCLASS()
 class MH_RECREATE_API UMH_GA_Run : public UMH_PlayerGameplayAbility
 {
@@ -31,5 +29,5 @@ protected:
 		bool bReplicateEndAbility, bool bWasCancelled) override;
 
 private:
-	void RestoreWalkGait();
+	void RestoreBaseGait();
 };

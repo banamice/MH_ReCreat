@@ -20,7 +20,7 @@ public class MH_ReCreate : ModuleRules
 			"GameplayAbilities"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+		PrivateDependencyModuleNames.AddRange(new string[] { "AnimationLocomotionLibraryRuntime" });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

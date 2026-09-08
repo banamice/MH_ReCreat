@@ -7,11 +7,10 @@
 
 UMH_GA_Aim::UMH_GA_Aim()
 {
-	// The ability instance must persist while the button is held so it can retain
-	// the handle of the ability granted on activation.
+	// 按键保持期间需要保留能力实例，以便保存激活时授予的能力句柄。
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	bRetriggerInstancedAbility = false;
-	// Ensure the server receives the release event so it can remove the granted GA.
+	// 确保服务器收到松开事件，以便移除临时授予的能力。
 	bReplicateInputDirectly = true;
 }
 
@@ -29,8 +28,7 @@ void UMH_GA_Aim::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		return;
 	}
 
-	// Gameplay abilities are granted by the authority. The resulting handle is
-	// replicated with the ASC and is retained for deterministic cleanup.
+	// 能力由服务器授予，生成的句柄会随 ASC 复制，并用于确定性清理。
 	if (ASC->GetOwner() && ASC->GetOwner()->HasAuthority() && !GrantedAbilityHandle.IsValid())
 	{
 		FGameplayAbilitySpec Spec(AbilityToGrant, 1);
@@ -71,7 +69,6 @@ void UMH_GA_Aim::ClearGrantedAbility(const FGameplayAbilityActorInfo* ActorInfo)
 		ASC->ClearAbility(GrantedAbilityHandle);
 	}
 
-	// FGameplayAbilitySpecHandle has no Invalidate() API in UE 5.8;
-	// assigning its default value resets it to the invalid INDEX_NONE state.
+	// UE 5.8 的 FGameplayAbilitySpecHandle 没有 Invalidate()，使用默认值重置为无效句柄。
 	GrantedAbilityHandle = FGameplayAbilitySpecHandle();
 }

@@ -29,5 +29,7 @@ private:
 	UFUNCTION()
 	void OnMontageEnd();
 	UFUNCTION()
+	void OnMontageCancelled();
+	UFUNCTION()
 	void OnEventReceived(FGameplayEventData Payload);
 };

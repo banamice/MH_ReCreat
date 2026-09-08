@@ -14,6 +14,7 @@ namespace MH_GameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Aim,"InputTag.Aim");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_GapllingHook,"InputTag.GapllingHook");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Run,"InputTag.Run");
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_Crouch,"InputTag.Crouch");
 	
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Combo_Y,"InputTag.Combo.Y");
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Combo_B,"InputTag.Combo.B");

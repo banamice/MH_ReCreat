@@ -40,7 +40,8 @@ AMH_BasePlayerCharacter::AMH_BasePlayerCharacter()
 	bUseControllerRotationRoll = false;
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 300.0f, 0.0f);
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 400.0f, 0.0f);
+	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	GetCharacterMovement()->MaxWalkSpeed = 400.0f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 }
@@ -48,8 +49,9 @@ AMH_BasePlayerCharacter::AMH_BasePlayerCharacter()
 void AMH_BasePlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
-	// Recover the native component pointer if a stale Blueprint archetype cleared it.
+	// 如果蓝图类默认对象清空了原生组件指针，则重新查找组件。
 	if (!IsValid(CombatComponent))
 	{
 		CombatComponent = FindComponentByClass<UMH_PlayerCombatComponent>();
@@ -84,25 +86,49 @@ void AMH_BasePlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 
 void AMH_BasePlayerCharacter::OnGaitTypeChange(const FGaitType InGaitType)
 {
+	SetBaseGaitType(InGaitType);
+}
+
+bool AMH_BasePlayerCharacter::SetBaseGaitType(const FGaitType InBaseGaitType)
+{
+	return ApplyLocomotionState(InBaseGaitType, MoveState);
+}
+
+bool AMH_BasePlayerCharacter::SetRunState(const bool bInRunning)
+{
+	return ApplyLocomotionState(BaseGaitType, bInRunning ? EMoveState::Run : EMoveState::None);
+}
+
+bool AMH_BasePlayerCharacter::ApplyLocomotionState(
+	const FGaitType InBaseGaitType,
+	const EMoveState InMoveState)
+{
 	if (!IsValid(LocomotionParams))
 	{
 		UE_LOG(LogMH, Error, TEXT("%s: LocomotionParams is not configured"), *GetName());
-		return;
+		return false;
 	}
 
-	const FLocomotionParameters* Parameters = LocomotionParams->GaitParams.Find(InGaitType);
+	const FGaitMoveStateParameters* GaitParameters = LocomotionParams->GaitParams.FindByPredicate(
+		[InBaseGaitType](const FGaitMoveStateParameters& Entry)
+		{
+			return Entry.GaitType == InBaseGaitType;
+		});
+	const FLocomotionParameters* Parameters = GaitParameters
+		? GaitParameters->MoveStateParams.Find(InMoveState)
+		: nullptr;
 	if (!Parameters)
 	{
-		UE_LOG(LogMH, Error, TEXT("%s: LocomotionParams has no entry for gait type %d"),
-			*GetName(), static_cast<uint8>(InGaitType));
-		return;
+		UE_LOG(LogMH, Error, TEXT("%s: LocomotionParams has no gait/move-state entry for gait %d and move state %d"),
+			*GetName(), static_cast<uint8>(InBaseGaitType), static_cast<uint8>(InMoveState));
+		return false;
 	}
 
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
 	if (!IsValid(MovementComponent))
 	{
 		UE_LOG(LogMH, Error, TEXT("%s: CharacterMovementComponent is invalid"), *GetName());
-		return;
+		return false;
 	}
 
 	MovementComponent->MaxWalkSpeed = Parameters->MaxWalkSpeed;
@@ -112,15 +138,21 @@ void AMH_BasePlayerCharacter::OnGaitTypeChange(const FGaitType InGaitType)
 	MovementComponent->BrakingFriction = Parameters->BrakingFriction;
 	MovementComponent->bUseSeparateBrakingFriction = Parameters->bUseSeparateBrakingFriction;
 
-	GaitType = InGaitType;
+	BaseGaitType = InBaseGaitType;
+	MoveState = InMoveState;
+	bIsRunning = MoveState == EMoveState::Run;
+	GaitType = BaseGaitType;
 
 	if (USkeletalMeshComponent* MeshComponent = GetMesh();
 		IMH_PlayerAnimInterface* AnimInterface = MeshComponent
 			? Cast<IMH_PlayerAnimInterface>(MeshComponent->GetAnimInstance())
 			: nullptr)
 	{
-		AnimInterface->SetGaitType(InGaitType);
+		AnimInterface->SetGaitType(GaitType);
+		AnimInterface->SetMoveState(MoveState);
 	}
+
+	return true;
 }
 
 void AMH_BasePlayerCharacter::BindInput(UInputComponent* PlayerInputComponent)

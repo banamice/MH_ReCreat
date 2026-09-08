@@ -5,8 +5,10 @@
 
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "Character/Player/MH_BasePlayerCharacter.h"
 #include "Component/CombatComponent/MH_PawnCombatConponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Weapon/MH_BaseWeapon.h"
 #include "Weapon/MH_ChracterWeapon.h"
 
@@ -15,12 +17,27 @@ void UMH_GA_EquipWeapon::ActivateAbility(const FGameplayAbilitySpecHandle Handle
                                          const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (AMH_BasePlayerCharacter* Character = GetPlayerCharacter())
+	{
+		const bool bIsCrouched = Character->GetBaseGaitType() == FGaitType::Crouch
+			|| (Character->GetCharacterMovement() && Character->GetCharacterMovement()->IsCrouching());
+		if (bIsCrouched)
+		{
+			Character->UnCrouch();
+			if (!Character->SetBaseGaitType(FGaitType::Walk))
+			{
+				EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+				return;
+			}
+		}
+	}
 	
-	UAbilityTask_PlayMontageAndWait* Task =  UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,FName(),EquipMontage);
-	Task->OnBlendOut.AddDynamic(this,&ThisClass::OnMontageEnd);
+	UAbilityTask_PlayMontageAndWait* Task = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this, FName(), EquipMontage, 1.f, NAME_None, false);
 	Task->OnCompleted.AddDynamic(this,&ThisClass::OnMontageEnd);
-	Task->OnCancelled.AddDynamic(this,&ThisClass::OnMontageEnd);
-	Task->OnInterrupted.AddDynamic(this,&ThisClass::OnMontageEnd);
+	Task->OnCancelled.AddDynamic(this,&ThisClass::OnMontageCancelled);
+	Task->OnInterrupted.AddDynamic(this,&ThisClass::OnMontageCancelled);
 	
 	UAbilityTask_WaitGameplayEvent* EventTask =  UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,EventTag);
 	EventTask->EventReceived.AddDynamic(this,&ThisClass::OnEventReceived);
@@ -31,6 +48,11 @@ void UMH_GA_EquipWeapon::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 void UMH_GA_EquipWeapon::OnMontageEnd()
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UMH_GA_EquipWeapon::OnMontageCancelled()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
 void UMH_GA_EquipWeapon::OnEventReceived(FGameplayEventData Payload)

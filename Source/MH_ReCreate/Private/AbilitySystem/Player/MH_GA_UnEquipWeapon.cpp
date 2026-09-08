@@ -16,11 +16,11 @@ void UMH_GA_UnEquipWeapon::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	
-	UAbilityTask_PlayMontageAndWait* Task =  UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,FName(),UnEquipMontage);
-	Task->OnBlendOut.AddDynamic(this,&ThisClass::OnMontageEnd);
+	UAbilityTask_PlayMontageAndWait* Task = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		this, FName(), UnEquipMontage, 1.f, NAME_None, false);
 	Task->OnCompleted.AddDynamic(this,&ThisClass::OnMontageEnd);
-	Task->OnCancelled.AddDynamic(this,&ThisClass::OnMontageEnd);
-	Task->OnInterrupted.AddDynamic(this,&ThisClass::OnMontageEnd);
+	Task->OnCancelled.AddDynamic(this,&ThisClass::OnMontageCancelled);
+	Task->OnInterrupted.AddDynamic(this,&ThisClass::OnMontageCancelled);
 	
 	UAbilityTask_WaitGameplayEvent* EventTask =  UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,EventTag);
 	EventTask->EventReceived.AddDynamic(this,&ThisClass::OnEventReceived);
@@ -31,6 +31,11 @@ void UMH_GA_UnEquipWeapon::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 void UMH_GA_UnEquipWeapon::OnMontageEnd()
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UMH_GA_UnEquipWeapon::OnMontageCancelled()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 
 void UMH_GA_UnEquipWeapon::OnEventReceived(FGameplayEventData Payload)

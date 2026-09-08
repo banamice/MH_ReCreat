@@ -46,8 +46,23 @@ private:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Lcocomotion",meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UMH_DA_GaitLocomotionParams> LocomotionParams;
+	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion", meta = (AllowPrivateAccess = "true"))
 	FGaitType GaitType = FGaitType::Walk;
+	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion", meta = (AllowPrivateAccess = "true"))
+	FGaitType BaseGaitType = FGaitType::Walk;
+	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion", meta = (AllowPrivateAccess = "true"))
+	bool bIsRunning = false;
+	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion", meta = (AllowPrivateAccess = "true"))
+	EMoveState MoveState = EMoveState::None;
+
 	void OnGaitTypeChange(const FGaitType InGaitType);
+	bool SetBaseGaitType(const FGaitType InBaseGaitType);
+	bool SetRunState(bool bInRunning);
+	FGaitType GetBaseGaitType() const { return BaseGaitType; }
+	bool IsRunning() const { return bIsRunning; }
+
+private:
+	bool ApplyLocomotionState(const FGaitType InBaseGaitType, const EMoveState InMoveState);
 #pragma endregion
 	
 #pragma  region Input

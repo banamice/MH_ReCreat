@@ -16,5 +16,5 @@ class MH_RECREATE_API UMH_DA_GaitLocomotionParams : public UDataAsset
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="MH|Gait")
-	TMap<FGaitType,FLocomotionParameters> GaitParams;
+	TArray<FGaitMoveStateParameters> GaitParams;
 };

@@ -23,7 +23,14 @@ public:
 	
 #pragma region LocomitionAmin
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Idle")
-	TObjectPtr<UAnimSequenceBase> IdleAnim;
+	TObjectPtr<UAnimSequenceBase> IdleWalk;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Idle")
+	TObjectPtr<UAnimSequenceBase> IdleCrouch;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Idle")
+	TObjectPtr<UAnimSequenceBase> IdleCrouchStart;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Idle")
+	TObjectPtr<UAnimSequenceBase> IdleCrouchEnd;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Cycle")
 	float WalkSlowThreadHold = 150.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Cycle")
@@ -31,6 +38,46 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Cycle")
 	TObjectPtr<UAnimSequenceBase> CycleWalk;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Cycle")
-	TObjectPtr<UAnimSequenceBase> CycleRun;
+	TObjectPtr<UAnimSequenceBase> CycleWalkRun;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Cycle")
+	TObjectPtr<UAnimSequenceBase> CycleCrouch;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Cycle")
+	TObjectPtr<UAnimSequenceBase> CycleCrouchRun;
+	
+	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Stop")
+	TObjectPtr<UAnimSequenceBase> StopWalk;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Stop")
+	TObjectPtr<UAnimSequenceBase> StopWalkRun;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Stop")
+	TObjectPtr<UAnimSequenceBase> StopCrouch;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Stop")
+	TObjectPtr<UAnimSequenceBase> StopCrouchRun;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Start")
+	TObjectPtr<UAnimSequenceBase> StartWalkForWard;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Start")
+	TObjectPtr<UAnimSequenceBase> StartWalkLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Start")
+	TObjectPtr<UAnimSequenceBase> StartWalkRight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Start")
+	TObjectPtr<UAnimSequenceBase> StartWalkBack;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Start")
+	TObjectPtr<UAnimSequenceBase> StartCrouchForWard;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
+	TObjectPtr<UAnimSequenceBase> PivotWalkLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
+	TObjectPtr<UAnimSequenceBase> PivotWalkRight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
+	TObjectPtr<UAnimSequenceBase> PivotWalkBack;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
+	TObjectPtr<UAnimSequenceBase> PivotCrouchLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
+	TObjectPtr<UAnimSequenceBase> PivotCrouchRight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MH|Pivot")
+	TObjectPtr<UAnimSequenceBase> PivotCrouchBack;
 #pragma endregion
+
 };

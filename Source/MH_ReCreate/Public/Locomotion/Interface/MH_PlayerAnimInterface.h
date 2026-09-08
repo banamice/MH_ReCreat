@@ -22,4 +22,5 @@ class MH_RECREATE_API IMH_PlayerAnimInterface
 
 public:
 	virtual void SetGaitType(const FGaitType InGaitType) = 0;
+	virtual void SetMoveState(const EMoveState InMoveState) = 0;
 };

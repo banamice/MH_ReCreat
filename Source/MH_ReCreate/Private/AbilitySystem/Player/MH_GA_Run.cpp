@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "AbilitySystem/Player/MH_GA_Run.h"
 
 #include "Character/Player/MH_BasePlayerCharacter.h"
+#include "Component/CombatComponent/MH_PawnCombatConponent.h"
 
 UMH_GA_Run::UMH_GA_Run()
 {
@@ -13,45 +13,55 @@ UMH_GA_Run::UMH_GA_Run()
 	bReplicateInputDirectly = true;
 }
 
-void UMH_GA_Run::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+void UMH_GA_Run::ActivateAbility(
+	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (AMH_BasePlayerCharacter* Character = GetPlayerCharacter())
+	// 持有武器时不允许奔跑。
+	const UMH_PawnCombatConponent* CombatComponent = GetCombatComponent();
+	if (CombatComponent && CombatComponent->HoldWeaponTag.IsValid())
 	{
-		Character->OnGaitTypeChange(FGaitType::Run);
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
 
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	AMH_BasePlayerCharacter* Character = GetPlayerCharacter();
+	if (!Character || !Character->SetRunState(true))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
 }
 
-void UMH_GA_Run::InputReleased(const FGameplayAbilitySpecHandle Handle,
+void UMH_GA_Run::InputReleased(
+	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo)
 {
-	RestoreWalkGait();
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 	Super::InputReleased(Handle, ActorInfo, ActivationInfo);
 }
 
-void UMH_GA_Run::EndAbility(const FGameplayAbilitySpecHandle Handle,
+void UMH_GA_Run::EndAbility(
+	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo,
-	bool bReplicateEndAbility, bool bWasCancelled)
+	bool bReplicateEndAbility,
+	bool bWasCancelled)
 {
-	RestoreWalkGait();
+	RestoreBaseGait();
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void UMH_GA_Run::RestoreWalkGait()
+void UMH_GA_Run::RestoreBaseGait()
 {
-	if (AMH_BasePlayerCharacter* Character = GetPlayerCharacter();
-		Character && Character->GaitType == FGaitType::Run)
+	AMH_BasePlayerCharacter* Character = GetPlayerCharacter();
+	if (Character && Character->IsRunning())
 	{
-		Character->OnGaitTypeChange(FGaitType::Walk);
+		Character->SetRunState(false);
 	}
 }

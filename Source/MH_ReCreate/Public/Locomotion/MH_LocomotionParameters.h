@@ -36,6 +36,34 @@ UENUM(BlueprintType)
 enum class FGaitType: uint8
 {
 	Walk,
-	Run,
 	Crouch,
+};
+
+UENUM(BlueprintType)
+enum class EMoveState : uint8
+{
+	None,
+	Run,
+};
+
+UENUM(BlueprintType)
+enum class EMovementDirection : uint8
+{
+	None,
+	Forward,
+	Backward,
+	Left,
+	Right,
+};
+
+USTRUCT(BlueprintType)
+struct FGaitMoveStateParameters
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FGaitType GaitType = FGaitType::Walk;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TMap<EMoveState, FLocomotionParameters> MoveStateParams;
 };
