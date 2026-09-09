@@ -11,6 +11,7 @@ void UMH_PawnCombatConponent::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UMH_PawnCombatConponent, HoldWeaponTag);
+	DOREPLIFETIME(UMH_PawnCombatConponent, bWeaponEquipMontageFinished);
 	DOREPLIFETIME(UMH_PawnCombatConponent, CarryingWeapons);
 }
 
@@ -54,7 +55,7 @@ AMH_BaseWeapon* UMH_PawnCombatConponent::GetCarryingWeaponByTag(const FGameplayT
 {
 	if (!WeaponTag.IsValid())
 	{
-		UE_LOG(LogMH, Warning, TEXT("GetCarryingWeaponByTag called with an invalid tag on %s"), *GetName());
+		// 空标签表示当前没有查询目标（例如角色尚未装备武器），这是正常状态。
 		return nullptr;
 	}
 
@@ -70,12 +71,29 @@ AMH_BaseWeapon* UMH_PawnCombatConponent::GetCarryingWeaponByTag(const FGameplayT
 		}
 	}
 
-	UE_LOG(LogMH, Warning, TEXT("No carrying weapon with tag %s on %s (registered: %d)"),
+	UE_LOG(LogMH, Verbose, TEXT("No carrying weapon with tag %s on %s (registered: %d)"),
 		*WeaponTag.ToString(), *GetName(), CarryingWeapons.Num());
 	return nullptr;
 }
 
 AMH_BaseWeapon* UMH_PawnCombatConponent::GetHoldWeapon() const
 {
+	if (!HoldWeaponTag.IsValid())
+	{
+		// 未持有武器时不进入通用查找，避免动画实例每帧产生无意义日志。
+		return nullptr;
+	}
 	return GetCarryingWeaponByTag(HoldWeaponTag);
+}
+
+void UMH_PawnCombatConponent::SetWeaponEquipMontageFinished(const bool bFinished)
+{
+	// 装备能力在拥有端和服务器端都会收到蒙太奇回调；两端都更新本地状态，
+	// 服务器值通过属性复制同步给其它客户端，避免仅依赖本地动画时序。
+	bWeaponEquipMontageFinished = bFinished;
+}
+
+bool UMH_PawnCombatConponent::IsWeaponEquipMontageFinished() const
+{
+	return bWeaponEquipMontageFinished;
 }

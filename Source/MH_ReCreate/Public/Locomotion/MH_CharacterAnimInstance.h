@@ -126,6 +126,14 @@ public:
 	bool bCanPerformLedgeJump = false;
 	UPROPERTY(BlueprintReadOnly, Category = "MH|Lcocomotion|Context", meta = (AllowPrivateAccess = "true"))
 	bool bIsSliding = false;
+
+	// 武器 LeftHandIK Socket 相对于右臂挂点骨骼（R_Arm_03）的目标变换。
+	// FABRIK 使用 Bone Space 后，右手在本帧动画中移动时，目标会随当前右臂姿势更新。
+	UPROPERTY(BlueprintReadOnly, Category = "MH|Weapon IK", meta = (AllowPrivateAccess = "true"))
+	FTransform LeftHandIKTransform = FTransform::Identity;
+	// 当前持有武器且武器配置了 LeftHandIK Socket 时为 true，用作 IK Alpha 的开关。
+	UPROPERTY(BlueprintReadOnly, Category = "MH|Weapon IK", meta = (AllowPrivateAccess = "true"))
+	bool bLeftHandIKEnabled = false;
 #pragma endregion
 
 

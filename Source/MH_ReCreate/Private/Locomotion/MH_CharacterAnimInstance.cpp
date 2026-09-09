@@ -6,8 +6,10 @@
 #include "AnimCharacterMovementLibrary.h"
 #include "Character/Player/MH_BasePlayerCharacter.h"
 #include "Component/MH_CharacterMovementComponent.h"
+#include "Component/CombatComponent/MH_PlayerCombatComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Weapon/MH_BaseWeapon.h"
 
 namespace MHLocomotionDebug
 {
@@ -100,6 +102,9 @@ namespace MHLocomotionDebug
 
 namespace
 {
+	// 角色右手持武器时使用的挂点。FABRIK 节点也以此 Socket 作为目标参考。
+	const FName WeaponHoldSocketName(TEXT("RHandWeapon"));
+
 	EMovementDirection GetRelativeMovementDirection(
 		const FVector& Acceleration,
 		const FVector& ReferenceForward,
@@ -213,6 +218,39 @@ void UMH_CharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bCanPerformLedgeJump = false;
 		bIsSliding = false;
 	}
+
+	// 武器附着在右手时，左手目标由武器的 LeftHandIK Socket 提供。
+	// 目标由纯局部空间变换组合得到，避免移动时读取世界 Socket 造成附着更新顺序偏差。
+	LeftHandIKTransform = FTransform::Identity;
+	bLeftHandIKEnabled = false;
+	if (const AMH_BasePlayerCharacter* PlayerCharacter = Cast<AMH_BasePlayerCharacter>(MH_Character.Get()))
+	{
+		const UMH_PlayerCombatComponent* CombatComponent = PlayerCharacter->GetMHCombatComponent();
+		const AMH_BaseWeapon* HoldWeapon = CombatComponent ? CombatComponent->GetHoldWeapon() : nullptr;
+		const USkeletalMeshComponent* CharacterMesh = PlayerCharacter->GetMesh();
+		const bool bWeaponIKReady = CombatComponent
+			&& CombatComponent->IsWeaponEquipMontageFinished();
+		if (bWeaponIKReady && HoldWeapon && HoldWeapon->HasLeftHandIKSocket() && CharacterMesh)
+		{
+			const USceneComponent* WeaponRoot = HoldWeapon->GetRootComponent();
+			if (WeaponRoot
+				&& WeaponRoot->GetAttachParent() == CharacterMesh)
+			{
+				const FName AttachSocketName = WeaponRoot->GetAttachSocketName();
+				if (AttachSocketName == WeaponHoldSocketName)
+				{
+					// FABRIK 的目标参考是角色 RHandWeapon Socket（Bone Space）。
+					// 这里只保存武器 LeftHandIK 相对该挂点的局部偏移，避免在 C++ 中读取动画骨骼姿势。
+					// FABRIK 会在动画评估阶段用当前帧的 RHandWeapon Socket 重建目标，移动时不会产生固定偏移。
+					const FTransform WeaponSocketLocal = HoldWeapon->GetLeftHandIKComponentTransform();
+					LeftHandIKTransform = WeaponSocketLocal
+						* WeaponRoot->GetRelativeTransform();
+					// Socket 存在且武器已附着到角色网格时，Identity 也可能是合法的局部变换，不能用数值判断开关。
+					bLeftHandIKEnabled = true;
+				}
+			}
+		}
+	}
 	
 	if (LastGaitType != GaitType)
 	{
@@ -262,9 +300,10 @@ void UMH_CharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSecon
 		? FMath::Max(0.0f, VelocityXYZ.Z / GravityMagnitude)
 		: 0.0f;
 	DeltaDistance = VelocityXYZ.Size2D() * DeltaSeconds;
-	VelocityXY = bIsLocomotionVelocitySuppressed
+	/*VelocityXY = bIsLocomotionVelocitySuppressed
 		? FVector::ZeroVector
-		: FVector(VelocityXYZ.X, VelocityXYZ.Y, 0.0f);
+		: FVector(VelocityXYZ.X, VelocityXYZ.Y, 0.0f);*/
+	VelocityXY =FVector(VelocityXYZ.X, VelocityXYZ.Y, 0.0f);
 	
 	const FVector PreviousAcceleration2D = Acceleration2D;
 	LastAcceleration2D = PreviousAcceleration2D;

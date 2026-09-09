@@ -19,6 +19,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Locomotion/MH_DA_GaitLocomotionParams.h"
 #include "Locomotion/Interface/MH_PlayerAnimInterface.h"
+#include "MotionWarpingComponent.h"
 #include "MH_ReCreate/Public/BPFuncLib/MH_BluePrintFuncLib.h"
 
 
@@ -38,6 +39,9 @@ AMH_BasePlayerCharacter::AMH_BasePlayerCharacter(const FObjectInitializer& Objec
 	SpringArmComponent->bUsePawnControlRotation = true;
 	
 	CombatComponent = CreateDefaultSubobject<UMH_PlayerCombatComponent>(TEXT("CombatComponent"));
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
+	// 允许在蒙太奇内部引用的动画序列上查找 Motion Warping Notify State。
+	MotionWarpingComponent->bSearchForWindowsInAnimsWithinMontages = true;
 	
 	
 	bUseControllerRotationPitch = false;

@@ -18,6 +18,12 @@ void UMH_GA_EquipWeapon::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	if (UMH_PawnCombatConponent* CombatComponent = GetCombatComponent())
+	{
+		// 武器可能在蒙太奇中段就通过动画通知挂到右手，此时仍禁止左手 IK。
+		CombatComponent->SetWeaponEquipMontageFinished(false);
+	}
+
 	if (AMH_BasePlayerCharacter* Character = GetPlayerCharacter())
 	{
 		const bool bIsCrouched = Character->GetBaseGaitType() == FGaitType::Crouch
@@ -32,7 +38,7 @@ void UMH_GA_EquipWeapon::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 			}
 		}
 	}
-	
+
 	UAbilityTask_PlayMontageAndWait* Task = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this, FName(), EquipMontage, 1.f, NAME_None, false);
 	Task->OnCompleted.AddDynamic(this,&ThisClass::OnMontageEnd);
@@ -47,11 +53,20 @@ void UMH_GA_EquipWeapon::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 
 void UMH_GA_EquipWeapon::OnMontageEnd()
 {
+	if (UMH_PawnCombatConponent* CombatComponent = GetCombatComponent())
+	{
+		// 只有完整播放到结尾才允许动画实例在下一帧启用左手 IK。
+		CombatComponent->SetWeaponEquipMontageFinished(true);
+	}
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void UMH_GA_EquipWeapon::OnMontageCancelled()
 {
+	if (UMH_PawnCombatConponent* CombatComponent = GetCombatComponent())
+	{
+		CombatComponent->SetWeaponEquipMontageFinished(false);
+	}
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 

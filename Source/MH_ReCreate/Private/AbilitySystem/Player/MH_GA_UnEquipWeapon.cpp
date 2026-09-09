@@ -15,6 +15,12 @@ void UMH_GA_UnEquipWeapon::ActivateAbility(const FGameplayAbilitySpecHandle Hand
                                            const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (UMH_PawnCombatConponent* CombatComponent = GetCombatComponent())
+	{
+		// 卸除流程开始后立即关闭左手 IK，避免继续吸附到即将收回的武器。
+		CombatComponent->SetWeaponEquipMontageFinished(false);
+	}
 	
 	UAbilityTask_PlayMontageAndWait* Task = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this, FName(), UnEquipMontage, 1.f, NAME_None, false);
@@ -30,11 +36,19 @@ void UMH_GA_UnEquipWeapon::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 
 void UMH_GA_UnEquipWeapon::OnMontageEnd()
 {
+	if (UMH_PawnCombatConponent* CombatComponent = GetCombatComponent())
+	{
+		CombatComponent->SetWeaponEquipMontageFinished(false);
+	}
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void UMH_GA_UnEquipWeapon::OnMontageCancelled()
 {
+	if (UMH_PawnCombatConponent* CombatComponent = GetCombatComponent())
+	{
+		CombatComponent->SetWeaponEquipMontageFinished(false);
+	}
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 }
 

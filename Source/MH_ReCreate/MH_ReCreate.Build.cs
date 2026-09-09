@@ -17,7 +17,8 @@ public class MH_ReCreate : ModuleRules
 			"EnhancedInput",
 			"GameplayTags", 
 			"GameplayTasks",
-			"GameplayAbilities"
+			"GameplayAbilities",
+			"MotionWarping"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "AnimationLocomotionLibraryRuntime" });

@@ -15,6 +15,7 @@ class UMH_DA_Input;
 class UCameraComponent;
 class USpringArmComponent;
 class UMH_CharacterMovementComponent;
+class UMotionWarpingComponent;
 
 /** 最近一次蹲下输入最终执行的动作。 */
 UENUM(BlueprintType)
@@ -59,6 +60,9 @@ private:
 	TObjectPtr<USpringArmComponent> SpringArmComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera",meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UMH_PlayerCombatComponent> CombatComponent;
+	/** 根运动攀爬所需的 Motion Warping 组件。 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MH|Climb", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 #pragma endregion
 	
 #pragma region Locomotion
